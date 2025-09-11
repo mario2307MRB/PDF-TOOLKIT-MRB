@@ -87,3 +87,15 @@ export const RotateLeftIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) =
     <path strokeLinecap="round" strokeLinejoin="round" d="M9 3H3v6m1.83 11.17A10 10 0 113.3 9.02" />
   </svg>
 );
+
+export const FilePdfIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM9.5 15.5c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5v-4c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v4zm3-2.5v-2H11v6h1.5v-2.5h1V17h1.5v-6h-3zm4.5 2.5c0 .83-.67 1.5-1.5 1.5h-2.5v-6H15c.83 0 1.5.67 1.5 1.5v3zM15 11.5h-1.5v3H15v-3z" />
+    </svg>
+);
+
+export const DragHandleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20 9H4v2h16V9zM4 15h16v-2H4v2z" />
+  </svg>
+);

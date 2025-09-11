@@ -24,8 +24,7 @@ export const usePdf = () => {
     }
   }, []);
 
-  const handleFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
+  const addFiles = useCallback(async (files: File[]) => {
     if (!files || files.length === 0) return;
 
     setLoading(true);
@@ -35,8 +34,7 @@ export const usePdf = () => {
     const newDocs: StoredPdfDoc[] = [];
 
     try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+      for (const file of files) {
         setProcessingMessage(`Procesando ${file.name}...`);
         const docId = `${file.name}-${Date.now()}`;
         
@@ -82,8 +80,6 @@ export const usePdf = () => {
     } finally {
       setLoading(false);
       setProcessingMessage('');
-      // Reset file input value to allow re-uploading the same file
-      event.target.value = '';
     }
   }, []);
 
@@ -170,7 +166,7 @@ export const usePdf = () => {
     loading,
     error,
     processingMessage,
-    handleFileChange,
+    addFiles,
     deletePage,
     reorderPages,
     rotatePage,
