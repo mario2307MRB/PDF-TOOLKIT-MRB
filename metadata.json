@@ -1,0 +1,5 @@
+{
+  "name": "PDF Toolkit Pro MRB",
+  "description": "An intuitive web application to merge, reorder, and delete pages from your PDF files directly in your browser. Upload multiple PDFs, arrange pages with drag-and-drop, and download your newly organized document.",
+  "requestFramePermissions": []
+}
