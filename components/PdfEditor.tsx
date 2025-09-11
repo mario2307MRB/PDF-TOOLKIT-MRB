@@ -1,6 +1,5 @@
-
 import React, { useState, useRef } from 'react';
-import type { PdfPage } from '../types';
+import type { PdfPage, CompressionLevel } from '../types';
 import PageThumbnail from './PageThumbnail';
 import { SaveIcon, PlusIcon, RefreshIcon } from './icons';
 import Spinner from './Spinner';
@@ -10,7 +9,7 @@ interface PdfEditorProps {
   onDeletePage: (pageId: string) => void;
   onReorderPages: (startIndex: number, endIndex: number) => void;
   onRotatePage: (pageId: string, direction: 'left' | 'right') => void;
-  onSave: () => void;
+  onSave: (compressionLevel: CompressionLevel) => void;
   onAddFiles: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onReset: () => void;
   loading: boolean;
@@ -27,6 +26,7 @@ const PdfEditor: React.FC<PdfEditorProps> = ({
   loading,
 }) => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [compressionLevel, setCompressionLevel] = useState<CompressionLevel>('high');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragStart = (index: number) => {
@@ -112,8 +112,23 @@ const PdfEditor: React.FC<PdfEditorProps> = ({
             <RefreshIcon className="h-5 w-5" />
             Empezar de nuevo
           </button>
+          
+          <div className="flex items-center gap-2 border-l-2 border-gray-200 pl-3 ml-1">
+            <label htmlFor="compression-level" className="text-sm font-medium text-gray-600 whitespace-nowrap">Compresión:</label>
+            <select
+                id="compression-level"
+                value={compressionLevel}
+                onChange={(e) => setCompressionLevel(e.target.value as CompressionLevel)}
+                className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-primary focus:border-primary block p-2"
+                aria-label="Nivel de compresión del PDF"
+            >
+                <option value="low">Estándar (Más rápido)</option>
+                <option value="high">Máxima (Mejor compresión)</option>
+            </select>
+          </div>
+
           <button
-            onClick={onSave}
+            onClick={() => onSave(compressionLevel)}
             disabled={loading}
             className="flex items-center gap-2 bg-primary text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-primary-hover transition-colors duration-200 disabled:bg-indigo-300 disabled:cursor-not-allowed"
           >

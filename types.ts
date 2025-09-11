@@ -1,4 +1,3 @@
-
 export interface PdfPage {
   id: string;
   docId: string;
@@ -8,3 +7,5 @@ export interface PdfPage {
   pageNumberInDoc: number;
   rotation: number;
 }
+
+export type CompressionLevel = 'low' | 'high';
