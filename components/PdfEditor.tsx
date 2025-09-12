@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import type { PdfPage, CompressionLevel } from '../types';
 import PageThumbnail from './PageThumbnail';
@@ -13,6 +14,7 @@ interface PdfEditorProps {
   onAddFiles: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onReset: () => void;
   loading: boolean;
+  processingMessage?: string;
 }
 
 const PdfEditor: React.FC<PdfEditorProps> = ({
@@ -24,6 +26,7 @@ const PdfEditor: React.FC<PdfEditorProps> = ({
   onAddFiles,
   onReset,
   loading,
+  processingMessage,
 }) => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [compressionLevel, setCompressionLevel] = useState<CompressionLevel>('high');
@@ -86,7 +89,15 @@ const PdfEditor: React.FC<PdfEditorProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {loading && (
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-30 rounded-lg">
+          <Spinner />
+          <p className="mt-4 text-lg font-semibold text-gray-700">{processingMessage || 'Procesando...'}</p>
+          <p className="text-gray-500">Esto puede tardar unos momentos.</p>
+        </div>
+      )}
+
       <div className="bg-white p-4 rounded-lg shadow-md flex flex-wrap items-center justify-between gap-4 sticky top-16 z-10">
         <h2 className="text-xl font-semibold text-gray-700">Editor de Páginas ({pages.length} páginas)</h2>
         <div className="flex items-center gap-2 flex-wrap">

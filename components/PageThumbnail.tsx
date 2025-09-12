@@ -34,7 +34,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({ page, index, onDelete, on
         isDragging ? 'opacity-50 border-primary scale-105' : 'border-transparent'
       }`}
     >
-      <div className="bg-gray-100 aspect-[7/10] flex items-center justify-center overflow-hidden">
+      <div className="bg-gray-100 aspect-square flex items-center justify-center overflow-hidden">
         <img 
           src={page.thumbnailUrl} 
           alt={`Página ${index + 1}`} 

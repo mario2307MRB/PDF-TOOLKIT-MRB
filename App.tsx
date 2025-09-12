@@ -35,10 +35,10 @@ const App: React.FC = () => {
     event.target.value = '';
   };
 
-  const handleAddMoreToEditor = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAddMoreToEditor = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      addFiles(Array.from(files));
+      await addFiles(Array.from(files));
     }
     event.target.value = '';
   };
@@ -65,6 +65,7 @@ const App: React.FC = () => {
           onAddFiles={handleAddMoreToEditor}
           onReset={handleReset}
           loading={loading}
+          processingMessage={processingMessage}
         />
       );
     }

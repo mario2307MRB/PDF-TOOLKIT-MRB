@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { FilePdfIcon, TrashIcon, DragHandleIcon, PlusIcon, RefreshIcon } from './icons';
+import { FilePdfIcon, TrashIcon, PlusIcon, RefreshIcon } from './icons';
 import Spinner from './Spinner';
 
 interface FilePreviewerProps {
@@ -20,24 +20,31 @@ const FilePreviewer: React.FC<FilePreviewerProps> = ({ files, onFilesChange, onC
     setDraggedIndex(index);
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLLIElement>) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
     e.preventDefault();
-  };
-  
-  const handleDragLeave = (e: React.DragEvent<HTMLLIElement>) => {
-    e.currentTarget.style.borderTop = 'none';
-  };
-  
-  const handleDragEnter = (e: React.DragEvent<HTMLLIElement>, index: number) => {
     if (draggedIndex === null || draggedIndex === index) return;
-    e.currentTarget.style.borderTop = '2px solid #4f46e5';
-  }
-
-  const handleDrop = (index: number) => {
-    if (draggedIndex === null) return;
+    
+    const target = e.currentTarget;
+    // Simple visual feedback by scaling up the target
+    target.style.transform = 'scale(1.05)';
+  };
+  
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.currentTarget.style.transform = 'scale(1)';
+  };
+  
+  const handleDrop = (index: number, e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.currentTarget.style.transform = 'scale(1)';
+    if (draggedIndex === null || draggedIndex === index) {
+      setDraggedIndex(null);
+      return;
+    };
+    
     const newFiles = [...files];
     const [removed] = newFiles.splice(draggedIndex, 1);
     newFiles.splice(index, 0, removed);
+    
     onFilesChange(newFiles);
     setDraggedIndex(null);
   };
@@ -64,36 +71,37 @@ const FilePreviewer: React.FC<FilePreviewerProps> = ({ files, onFilesChange, onC
         </div>
       </div>
 
-      <ul className="space-y-3 max-h-[50vh] overflow-y-auto pr-2 -mr-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 min-h-[200px] py-2">
         {files.map((file, index) => (
-          <li
+          <div
             key={`${file.name}-${file.lastModified}`}
             draggable
             onDragStart={() => handleDragStart(index)}
-            onDragOver={handleDragOver}
-            onDrop={() => handleDrop(index)}
-            onDragEnter={(e) => handleDragEnter(e, index)}
+            onDragOver={(e) => handleDragOver(e, index)}
+            onDrop={(e) => handleDrop(index, e)}
             onDragLeave={handleDragLeave}
-            className={`flex items-center p-3 rounded-lg border transition-all duration-200 ${draggedIndex === index ? 'shadow-lg bg-indigo-50 scale-105' : 'bg-gray-50 shadow-sm hover:shadow-md'}`}
+            onDragEnd={() => setDraggedIndex(null)}
+            className={`relative group p-4 border rounded-lg flex flex-col items-center text-center cursor-grab transition-all duration-200 ${
+              draggedIndex === index 
+                ? 'opacity-50 scale-105 shadow-2xl border-primary' 
+                : 'bg-gray-50 shadow-sm hover:shadow-md hover:border-primary'
+            }`}
           >
-            <button className="cursor-grab text-gray-400 hover:text-gray-600 mr-3 touch-none">
-                <DragHandleIcon className="h-6 w-6" />
-            </button>
-            <FilePdfIcon className="h-8 w-8 text-red-500 mr-4 flex-shrink-0" />
-            <div className="flex-grow min-w-0">
-              <p className="font-semibold text-gray-800 truncate">{file.name}</p>
-              <p className="text-sm text-gray-500">{(file.size / 1024).toFixed(2)} KB</p>
-            </div>
             <button
               onClick={() => handleDeleteFile(index)}
-              className="ml-4 text-gray-400 hover:text-red-500 p-2 rounded-full transition-colors"
+              className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1.5 rounded-full transition-colors bg-white/50 opacity-0 group-hover:opacity-100"
               aria-label={`Eliminar ${file.name}`}
             >
               <TrashIcon className="h-5 w-5" />
             </button>
-          </li>
+            <FilePdfIcon className="h-16 w-16 text-red-500 mb-3 flex-shrink-0" />
+            <div className="flex-grow min-w-0 w-full">
+              <p className="font-semibold text-gray-800 truncate text-sm" title={file.name}>{file.name}</p>
+              <p className="text-xs text-gray-500">{(file.size / 1024).toFixed(2)} KB</p>
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
       
       <div className="border-t pt-6 flex flex-wrap items-center justify-end gap-3">
         <button
