@@ -6,6 +6,8 @@ import PdfEditor from './components/PdfEditor';
 import { LogoIcon } from './components/icons';
 import FilePreviewer from './components/FilePreviewer';
 import Spinner from './components/Spinner';
+import SuccessScreen from './components/SuccessScreen';
+import type { CompressionLevel } from './types';
 
 const App: React.FC = () => {
   const {
@@ -22,6 +24,7 @@ const App: React.FC = () => {
   } = usePdf();
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isSaveSuccess, setIsSaveSuccess] = useState<boolean>(false);
 
   const handleInitialFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -48,12 +51,23 @@ const App: React.FC = () => {
     setSelectedFiles([]);
   };
 
+  const handleSavePdf = async (compressionLevel: CompressionLevel) => {
+    const success = await savePdf(compressionLevel);
+    if (success) {
+      setIsSaveSuccess(true);
+    }
+  };
+
   const handleReset = () => {
     reset();
     setSelectedFiles([]);
+    setIsSaveSuccess(false);
   };
 
   const renderContent = () => {
+    if (isSaveSuccess) {
+      return <SuccessScreen onStartOver={handleReset} />;
+    }
     if (pages.length > 0) {
       return (
         <PdfEditor
@@ -61,7 +75,7 @@ const App: React.FC = () => {
           onDeletePage={deletePage}
           onReorderPages={reorderPages}
           onRotatePage={rotatePage}
-          onSave={savePdf}
+          onSave={handleSavePdf}
           onAddFiles={handleAddMoreToEditor}
           onReset={handleReset}
           loading={loading}

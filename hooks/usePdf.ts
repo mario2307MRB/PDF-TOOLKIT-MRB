@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import type { PdfPage, CompressionLevel } from '../types';
 
@@ -112,10 +113,10 @@ export const usePdf = () => {
     );
   }, []);
 
-  const savePdf = useCallback(async (compressionLevel: CompressionLevel = 'high') => {
+  const savePdf = useCallback(async (compressionLevel: CompressionLevel = 'high'): Promise<boolean> => {
     if (pages.length === 0) {
       setError('No hay páginas para guardar.');
-      return;
+      return false;
     }
     setLoading(true);
     setError(null);
@@ -136,8 +137,6 @@ export const usePdf = () => {
 
       const saveOptions: { useObjectStreams?: boolean } = {};
 
-      // Using object streams is the best compression method available in pdf-lib.
-      // It efficiently reduces file size by optimizing the PDF's internal structure.
       if (compressionLevel === 'high') {
         saveOptions.useObjectStreams = true;
       } else { // 'low'
@@ -147,15 +146,19 @@ export const usePdf = () => {
       const pdfBytes = await newPdfDoc.save(saveOptions);
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
       const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(blob);
+      link.href = url;
       link.download = `documento-unido-${Date.now()}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      return true;
 
     } catch (e) {
       console.error(e);
       setError('Hubo un error al guardar el PDF.');
+      return false;
     } finally {
       setLoading(false);
       setProcessingMessage('');
