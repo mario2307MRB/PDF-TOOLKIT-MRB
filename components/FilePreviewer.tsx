@@ -3,9 +3,14 @@ import React, { useState, useRef } from 'react';
 import { FilePdfIcon, TrashIcon, PlusIcon, RefreshIcon } from './icons';
 import Spinner from './Spinner';
 
+interface SelectedFile {
+  file: File;
+  id: string;
+}
+
 interface FilePreviewerProps {
-  files: File[];
-  onFilesChange: (files: File[]) => void;
+  files: SelectedFile[];
+  onFilesChange: (files: SelectedFile[]) => void;
   onConfirm: (files: File[]) => void;
   onCancel: () => void;
   onAddFiles: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -72,35 +77,38 @@ const FilePreviewer: React.FC<FilePreviewerProps> = ({ files, onFilesChange, onC
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 min-h-[200px] py-2">
-        {files.map((file, index) => (
-          <div
-            key={`${file.name}-${file.lastModified}`}
-            draggable
-            onDragStart={() => handleDragStart(index)}
-            onDragOver={(e) => handleDragOver(e, index)}
-            onDrop={(e) => handleDrop(index, e)}
-            onDragLeave={handleDragLeave}
-            onDragEnd={() => setDraggedIndex(null)}
-            className={`relative group p-4 border rounded-lg flex flex-col items-center text-center cursor-grab transition-all duration-200 ${
-              draggedIndex === index 
-                ? 'opacity-50 scale-105 shadow-2xl border-primary' 
-                : 'bg-gray-50 shadow-sm hover:shadow-md hover:border-primary'
-            }`}
-          >
-            <button
-              onClick={() => handleDeleteFile(index)}
-              className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1.5 rounded-full transition-colors bg-white/50 opacity-0 group-hover:opacity-100"
-              aria-label={`Eliminar ${file.name}`}
+        {files.map((selectedFile, index) => {
+          const { file, id } = selectedFile;
+          return (
+            <div
+              key={id}
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDrop={(e) => handleDrop(index, e)}
+              onDragLeave={handleDragLeave}
+              onDragEnd={() => setDraggedIndex(null)}
+              className={`relative group p-4 border rounded-lg flex flex-col items-center text-center cursor-grab transition-all duration-200 ${
+                draggedIndex === index 
+                  ? 'opacity-50 scale-105 shadow-2xl border-primary' 
+                  : 'bg-gray-50 shadow-sm hover:shadow-md hover:border-primary'
+              }`}
             >
-              <TrashIcon className="h-5 w-5" />
-            </button>
-            <FilePdfIcon className="h-16 w-16 text-red-500 mb-3 flex-shrink-0" />
-            <div className="flex-grow min-w-0 w-full">
-              <p className="font-semibold text-gray-800 truncate text-sm" title={file.name}>{file.name}</p>
-              <p className="text-xs text-gray-500">{(file.size / 1024).toFixed(2)} KB</p>
+              <button
+                onClick={() => handleDeleteFile(index)}
+                className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1.5 rounded-full transition-colors bg-white/50 opacity-0 group-hover:opacity-100"
+                aria-label={`Eliminar ${file.name}`}
+              >
+                <TrashIcon className="h-5 w-5" />
+              </button>
+              <FilePdfIcon className="h-16 w-16 text-red-500 mb-3 flex-shrink-0" />
+              <div className="flex-grow min-w-0 w-full">
+                <p className="font-semibold text-gray-800 truncate text-sm" title={file.name}>{file.name}</p>
+                <p className="text-xs text-gray-500">{(file.size / 1024).toFixed(2)} KB</p>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
       
       <div className="border-t pt-6 flex flex-wrap items-center justify-end gap-3">
@@ -127,7 +135,7 @@ const FilePreviewer: React.FC<FilePreviewerProps> = ({ files, onFilesChange, onC
             Cancelar
         </button>
         <button
-            onClick={() => onConfirm(files)}
+            onClick={() => onConfirm(files.map(f => f.file))}
             disabled={loading || files.length === 0}
             className="flex items-center justify-center gap-2 bg-primary text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-primary-hover transition-colors duration-200 disabled:bg-indigo-300 disabled:cursor-not-allowed min-w-[200px]"
         >

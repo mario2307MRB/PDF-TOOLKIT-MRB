@@ -9,6 +9,11 @@ import Spinner from './components/Spinner';
 import SuccessScreen from './components/SuccessScreen';
 import type { CompressionLevel } from './types';
 
+interface SelectedFile {
+  file: File;
+  id: string;
+}
+
 const App: React.FC = () => {
   const {
     pages,
@@ -23,17 +28,17 @@ const App: React.FC = () => {
     reset,
   } = usePdf();
 
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
   const [isSaveSuccess, setIsSaveSuccess] = useState<boolean>(false);
 
   const handleInitialFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      setSelectedFiles(prev => {
-        const existingFileNames = new Set(prev.map(f => f.name));
-        const newUniqueFiles = Array.from(files).filter(f => !existingFileNames.has(f.name));
-        return [...prev, ...newUniqueFiles];
-      });
+      const newFilesWithId = Array.from(files).map(file => ({
+        file,
+        id: `${file.name}-${file.size}-${file.lastModified}-${Math.random()}`
+      }));
+      setSelectedFiles(prev => [...prev, ...newFilesWithId]);
     }
     event.target.value = '';
   };
