@@ -18,14 +18,18 @@ const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ imageDataUrl, onCon
   const processImageWithAI = async (aiPrompt: string) => {
     if (!aiPrompt) return;
 
+    // FIX: Use process.env.API_KEY as per the coding guidelines. This resolves the error "Property 'env' does not exist on type 'ImportMeta'".
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      // FIX: Updated error message to reference API_KEY to align with the API key handling change.
+      setError("Error de configuración: La clave de API no fue encontrada. Por favor, configure la variable de entorno 'API_KEY' en su plataforma de hosting (ej. Vercel).");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      // FIX: The API key must be obtained exclusively from `process.env.API_KEY` and used directly
-      // in the GoogleGenAI constructor as per the coding guidelines. The previous implementation
-      // used a different environment variable method and included a check for the key's existence,
-      // which is discouraged.
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey });
       
       const mimeType = currentImage.substring(currentImage.indexOf(':') + 1, currentImage.indexOf(';'));
       const base64Data = currentImage.substring(currentImage.indexOf(',') + 1);
@@ -54,12 +58,18 @@ const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ imageDataUrl, onCon
 
     } catch (err: any) {
       console.error("AI adjustment failed:", err);
-      // Check for specific API key related errors from the library if possible
-      if (err.message && err.message.includes('API key')) {
-          setError("La clave API proporcionada no es válida o ha expirado.");
-      } else {
-          setError(err.message || "Ocurrió un error al ajustar la imagen.");
+      let errorMessage = "Ocurrió un error al ajustar la imagen. Inténtelo de nuevo.";
+      if (err instanceof Error && err.message) {
+        if (err.message.includes('API key')) {
+            // FIX: Updated error message to reference API_KEY to align with the API key handling change.
+            errorMessage = "Error de API: La clave proporcionada no es válida. Verifique su variable de entorno 'API_KEY'.";
+        } else if (err.message.includes('400')) { // Bad request, maybe prompt issue
+            errorMessage = "La IA no pudo procesar la solicitud. Intente con un prompt diferente o una imagen distinta.";
+        } else {
+            errorMessage = err.message;
+        }
       }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -70,7 +80,7 @@ const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ imageDataUrl, onCon
   };
   
   const handleEnhanceDocument = () => {
-    const documentPrompt = "Esto es una foto de un documento. Por favor, ajústala para que parezca escaneada. Realiza lo siguiente: 1. Recorta la imagen para que solo se vea el documento, eliminando el fondo. 2. Endereza la perspectiva si es necesario. 3. Elimina sombras y brillos. 4. Aumenta el contraste y la nitidez del texto para máxima legibilidad.";
+    const documentPrompt = "Actúa como un escáner de documentos: recorta la imagen para que se ajuste al documento, corrige la perspectiva, elimina las sombras y mejora el contraste del texto para una máxima claridad.";
     processImageWithAI(documentPrompt);
   };
 

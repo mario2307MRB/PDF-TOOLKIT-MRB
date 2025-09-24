@@ -28,38 +28,45 @@ export const usePdf = () => {
     const newPages: PdfPage[] = [];
     const newDocs: StoredPdfDoc[] = [];
 
-    // Load with pdf-lib for later manipulation
     const pdfLibDoc = await PDFLib.PDFDocument.load(arrayBuffer);
     newDocs.push({ id: docId, doc: pdfLibDoc });
 
-    // Load with pdf.js for rendering thumbnails
-    const pdfJsDoc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
-    
-    for (let j = 1; j <= pdfJsDoc.numPages; j++) {
-      setProcessingMessage(`Renderizando página ${j} de ${pdfJsDoc.numPages} en ${docName}`);
-      const page = await pdfJsDoc.getPage(j);
-      const viewport = page.getViewport({ scale: 0.5 });
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
+    let pdfJsDoc: any = null;
+    try {
+        pdfJsDoc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+        for (let j = 1; j <= pdfJsDoc.numPages; j++) {
+            setProcessingMessage(`Renderizando página ${j} de ${pdfJsDoc.numPages} en ${docName}`);
+            const page = await pdfJsDoc.getPage(j);
+            try {
+                const viewport = page.getViewport({ scale: 0.5 });
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
 
-      if (context) {
-        await page.render({ canvasContext: context, viewport: viewport }).promise;
-        newPages.push({
-          id: `${docId}-page-${j}`,
-          docId: docId,
-          originalPageIndex: j - 1,
-          thumbnailUrl: canvas.toDataURL(),
-          docName: docName,
-          pageNumberInDoc: j,
-          rotation: 0,
-        });
-      }
+                if (context) {
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+                    newPages.push({
+                        id: `${docId}-page-${j}`,
+                        docId: docId,
+                        originalPageIndex: j - 1,
+                        thumbnailUrl: canvas.toDataURL(),
+                        docName: docName,
+                        pageNumberInDoc: j,
+                        rotation: 0,
+                    });
+                }
+            } finally {
+                // Releases page-specific resources to prevent memory leaks.
+                page.cleanup();
+            }
+        }
+    } finally {
+        // Ensures the main document proxy is destroyed to free up significant memory.
+        if (pdfJsDoc) {
+            pdfJsDoc.destroy();
+        }
     }
-    
-    // Clean up the pdf.js document proxy to free up memory
-    pdfJsDoc.destroy();
 
     setPages(prev => [...prev, ...newPages]);
     setStoredDocs(prev => [...prev, ...newDocs]);
