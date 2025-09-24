@@ -18,11 +18,10 @@ const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ imageDataUrl, onCon
   const processImageWithAI = async (aiPrompt: string) => {
     if (!aiPrompt) return;
 
-    // FIX: Use process.env.API_KEY as per the coding guidelines. This resolves the error "Property 'env' does not exist on type 'ImportMeta'".
+    // FIX: Use process.env.API_KEY instead of import.meta.env.VITE_API_KEY to fix the TypeScript error and align with Gemini API guidelines.
     const apiKey = process.env.API_KEY;
     if (!apiKey) {
-      // FIX: Updated error message to reference API_KEY to align with the API key handling change.
-      setError("Error de configuración: La clave de API no fue encontrada. Por favor, configure la variable de entorno 'API_KEY' en su plataforma de hosting (ej. Vercel).");
+      setError("Error de configuración: La clave de API no fue encontrada. Por favor, configure la variable de entorno 'API_KEY'.");
       return;
     }
 
@@ -61,7 +60,7 @@ const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ imageDataUrl, onCon
       let errorMessage = "Ocurrió un error al ajustar la imagen. Inténtelo de nuevo.";
       if (err instanceof Error && err.message) {
         if (err.message.includes('API key')) {
-            // FIX: Updated error message to reference API_KEY to align with the API key handling change.
+            // FIX: Update error message to refer to the correct environment variable 'API_KEY'.
             errorMessage = "Error de API: La clave proporcionada no es válida. Verifique su variable de entorno 'API_KEY'.";
         } else if (err.message.includes('400')) { // Bad request, maybe prompt issue
             errorMessage = "La IA no pudo procesar la solicitud. Intente con un prompt diferente o una imagen distinta.";

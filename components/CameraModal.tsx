@@ -11,6 +11,7 @@ const CameraModal: React.FC<CameraModalProps> = ({ onCapture, onClose }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -26,6 +27,7 @@ const CameraModal: React.FC<CameraModalProps> = ({ onCapture, onClose }) => {
     setLoading(true);
     setError(null);
     setCapturedImage(null);
+    setImageAspectRatio(null);
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setError("La cámara no es compatible con este navegador.");
@@ -87,8 +89,14 @@ const CameraModal: React.FC<CameraModalProps> = ({ onCapture, onClose }) => {
       if (context) {
         context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
         const dataUrl = canvas.toDataURL('image/jpeg');
-        setCapturedImage(dataUrl);
-        stopCamera();
+        
+        const img = new Image();
+        img.onload = () => {
+          setImageAspectRatio(img.width / img.height);
+          setCapturedImage(dataUrl);
+          stopCamera();
+        };
+        img.src = dataUrl;
       }
     }
   };
@@ -108,7 +116,12 @@ const CameraModal: React.FC<CameraModalProps> = ({ onCapture, onClose }) => {
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl p-6 space-y-4 flex flex-col max-h-[90vh]">
         <h2 className="text-xl font-bold text-gray-800 flex-shrink-0">Tomar Foto</h2>
         
-        <div className="relative flex-grow min-h-0 bg-gray-200 rounded-md overflow-hidden flex items-center justify-center">
+        <div 
+          className="relative flex-grow min-h-0 bg-gray-200 rounded-md overflow-hidden flex items-center justify-center transition-all duration-300"
+          style={{
+            aspectRatio: capturedImage && imageAspectRatio ? `${imageAspectRatio}` : 'auto'
+          }}
+        >
             {loading && <Spinner />}
             {error && !loading && <p className="text-red-500 px-4 text-center">{error}</p>}
             {!capturedImage ? (
