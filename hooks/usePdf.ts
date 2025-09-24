@@ -67,7 +67,7 @@ export const usePdf = () => {
     } finally {
         // Ensures the main document proxy is destroyed to free up significant memory.
         if (pdfJsDoc) {
-            pdfJsDoc.destroy();
+            await pdfJsDoc.destroy();
         }
     }
 
