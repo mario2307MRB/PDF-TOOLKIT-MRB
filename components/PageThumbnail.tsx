@@ -7,12 +7,11 @@ interface PageThumbnailProps {
   page: PdfPage;
   index: number;
   onDelete: () => void;
-  onDragStart: () => void;
   isDragging: boolean;
   onRotate: (direction: 'left' | 'right') => void;
 }
 
-const PageThumbnail: React.FC<PageThumbnailProps> = ({ page, index, onDelete, onDragStart, isDragging, onRotate }) => {
+const PageThumbnail: React.FC<PageThumbnailProps> = ({ page, index, onDelete, isDragging, onRotate }) => {
   const handleRotate = (e: React.MouseEvent, direction: 'left' | 'right') => {
     e.stopPropagation(); // Evita que comience el arrastre
     e.preventDefault();
@@ -28,8 +27,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({ page, index, onDelete, on
   
   return (
     <div
-      draggable
-      onDragStart={onDragStart}
       className={`relative group border-2 rounded-lg shadow-md overflow-hidden transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl cursor-grab ${
         isDragging ? 'opacity-50 border-primary scale-105' : 'border-transparent'
       }`}

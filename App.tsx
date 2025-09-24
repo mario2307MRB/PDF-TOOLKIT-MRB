@@ -8,6 +8,8 @@ import FilePreviewer from './components/FilePreviewer';
 import Spinner from './components/Spinner';
 import SuccessScreen from './components/SuccessScreen';
 import type { CompressionLevel } from './types';
+import CameraModal from './components/CameraModal';
+import ImageEditorModal from './components/ImageEditorModal';
 
 interface SelectedFile {
   file: File;
@@ -26,10 +28,14 @@ const App: React.FC = () => {
     rotatePage,
     savePdf,
     reset,
+    addImageAsPage,
   } = usePdf();
 
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
   const [isSaveSuccess, setIsSaveSuccess] = useState<boolean>(false);
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const [showImageEditorModal, setShowImageEditorModal] = useState(false);
+  const [imageToEdit, setImageToEdit] = useState<string | null>(null);
 
   const handleInitialFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -41,6 +47,31 @@ const App: React.FC = () => {
       setSelectedFiles(prev => [...prev, ...newFilesWithId]);
     }
     event.target.value = '';
+  };
+  
+  const handleImageFileSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImageToEdit(e.target?.result as string);
+        setShowImageEditorModal(true);
+      };
+      reader.readAsDataURL(file);
+    }
+    event.target.value = ''; // Reset input
+  };
+  
+  const handlePhotoCaptured = (imageDataUrl: string) => {
+    setShowCameraModal(false);
+    setImageToEdit(imageDataUrl);
+    setShowImageEditorModal(true);
+  };
+  
+  const handleImageConfirmed = async (imageDataUrl: string) => {
+    setShowImageEditorModal(false);
+    setImageToEdit(null);
+    await addImageAsPage(imageDataUrl);
   };
 
   const handleAddMoreToEditor = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,6 +113,8 @@ const App: React.FC = () => {
           onRotatePage={rotatePage}
           onSave={handleSavePdf}
           onAddFiles={handleAddMoreToEditor}
+          onImageFileChange={handleImageFileSelected}
+          onTakePhoto={() => setShowCameraModal(true)}
           onReset={handleReset}
           loading={loading}
           processingMessage={processingMessage}
@@ -109,7 +142,11 @@ const App: React.FC = () => {
         </div>
       );
     }
-    return <FileUploader onFileChange={handleInitialFileSelect} />;
+    return <FileUploader 
+              onFileChange={handleInitialFileSelect}
+              onImageFileChange={handleImageFileSelected}
+              onTakePhoto={() => setShowCameraModal(true)}
+           />;
   };
 
   return (
@@ -142,6 +179,23 @@ const App: React.FC = () => {
           Creado Por Mario Reyes B. Copiapó Atacama Chile 2025
         </p>
       </footer>
+      
+      {showCameraModal && (
+        <CameraModal
+          onCapture={handlePhotoCaptured}
+          onClose={() => setShowCameraModal(false)}
+        />
+      )}
+      {showImageEditorModal && imageToEdit && (
+        <ImageEditorModal
+          imageDataUrl={imageToEdit}
+          onConfirm={handleImageConfirmed}
+          onClose={() => {
+            setShowImageEditorModal(false);
+            setImageToEdit(null);
+          }}
+        />
+      )}
     </div>
   );
 };

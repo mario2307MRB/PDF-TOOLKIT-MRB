@@ -99,3 +99,22 @@ export const DragHandleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) =
     <path d="M20 9H4v2h16V9zM4 15h16v-2H4v2z" />
   </svg>
 );
+
+export const ImageIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+  </svg>
+);
+
+export const CameraIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M9.4 10.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5zM12 4c-2.39 0-4.46 1.33-5.46 3.32L5.2 8.5H4c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2h-1.2l-1.34-1.18C16.46 5.33 14.39 4 12 4zm0 14c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" />
+    <path d="M12 17c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z" />
+  </svg>
+);
+
+export const SparklesIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M19 8a.5.5 0 00.5-.5V6h1.5a.5.5 0 000-1H19.5V3.5a.5.5 0 00-1 0V5H17a.5.5 0 000 1h1.5v1.5a.5.5 0 00.5.5zM10 21.5a.5.5 0 00.5-.5V19h1.5a.5.5 0 000-1H10.5v-1.5a.5.5 0 00-1 0V18H8a.5.5 0 000 1h1.5v1.5a.5.5 0 00.5.5zM4.5 13a.5.5 0 00.5-.5V11h1.5a.5.5 0 000-1H5V8.5a.5.5 0 00-1 0V10H2.5a.5.5 0 000 1H4v1.5a.5.5 0 00.5.5z" />
+  </svg>
+);
