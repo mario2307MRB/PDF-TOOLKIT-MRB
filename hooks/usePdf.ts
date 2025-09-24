@@ -36,8 +36,9 @@ export const usePdf = () => {
         pdfJsDoc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
         for (let j = 1; j <= pdfJsDoc.numPages; j++) {
             setProcessingMessage(`Renderizando página ${j} de ${pdfJsDoc.numPages} en ${docName}`);
-            const page = await pdfJsDoc.getPage(j);
+            let page: any = null;
             try {
+                page = await pdfJsDoc.getPage(j);
                 const viewport = page.getViewport({ scale: 0.5 });
                 const canvas = document.createElement('canvas');
                 const context = canvas.getContext('2d');
@@ -57,8 +58,10 @@ export const usePdf = () => {
                     });
                 }
             } finally {
-                // Releases page-specific resources to prevent memory leaks.
-                page.cleanup();
+                // Releases page-specific resources to prevent memory leaks, even if rendering fails.
+                if (page) {
+                  page.cleanup();
+                }
             }
         }
     } finally {
