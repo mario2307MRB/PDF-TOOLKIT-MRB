@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export const UploadIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -116,5 +115,11 @@ export const CameraIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 export const SparklesIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
     <path d="M19 8a.5.5 0 00.5-.5V6h1.5a.5.5 0 000-1H19.5V3.5a.5.5 0 00-1 0V5H17a.5.5 0 000 1h1.5v1.5a.5.5 0 00.5.5zM10 21.5a.5.5 0 00.5-.5V19h1.5a.5.5 0 000-1H10.5v-1.5a.5.5 0 00-1 0V18H8a.5.5 0 000 1h1.5v1.5a.5.5 0 00.5.5zM4.5 13a.5.5 0 00.5-.5V11h1.5a.5.5 0 000-1H5V8.5a.5.5 0 00-1 0V10H2.5a.5.5 0 000 1H4v1.5a.5.5 0 00.5.5z" />
+  </svg>
+);
+
+export const DocumentScannerIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M7 3H4v3H2V3c0-1.1.9-2 2-2h3v2zm12 0h-3V1h3c1.1 0 2 .9 2 2v3h-2V3zM7 21H4v-3H2v3c0 1.1.9 2 2 2h3v-2zm12 0h-3v2h3c1.1 0 2-.9 2-2v-3h-2v3zM19 8H5c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4c0-1.1-.9-2-2-2zm-8 6H8v-4h3v4zm5 0h-3v-4h3v4z"/>
   </svg>
 );

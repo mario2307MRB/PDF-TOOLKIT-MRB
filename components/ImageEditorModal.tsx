@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { GoogleGenAI, Modality } from "@google/genai";
-import { SparklesIcon } from './icons';
+import { SparklesIcon, DocumentScannerIcon } from './icons';
 import Spinner from './Spinner';
 
 interface ImageEditorModalProps {
@@ -16,8 +15,8 @@ const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ imageDataUrl, onCon
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleAdjustWithAI = async () => {
-    if (!prompt) return;
+  const processImageWithAI = async (aiPrompt: string) => {
+    if (!aiPrompt) return;
     setLoading(true);
     setError(null);
     try {
@@ -31,7 +30,7 @@ const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ imageDataUrl, onCon
         contents: {
           parts: [
             { inlineData: { data: base64Data, mimeType: mimeType } },
-            { text: prompt },
+            { text: aiPrompt },
           ],
         },
         config: {
@@ -54,6 +53,15 @@ const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ imageDataUrl, onCon
     } finally {
       setLoading(false);
     }
+  };
+  
+  const handleAdjustWithPrompt = () => {
+    processImageWithAI(prompt);
+  };
+  
+  const handleEnhanceDocument = () => {
+    const documentPrompt = "Esto es una foto de un documento. Por favor, ajústala para que parezca escaneada. Realiza lo siguiente: 1. Recorta la imagen para que solo se vea el documento, eliminando el fondo. 2. Endereza la perspectiva si es necesario. 3. Elimina sombras y brillos. 4. Aumenta el contraste y la nitidez del texto para máxima legibilidad.";
+    processImageWithAI(documentPrompt);
   };
 
   return (
@@ -83,7 +91,7 @@ const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ imageDataUrl, onCon
               aria-label="Prompt de ajuste de imagen"
             />
             <button
-              onClick={handleAdjustWithAI}
+              onClick={handleAdjustWithPrompt}
               disabled={loading || !prompt}
               className="flex items-center gap-2 bg-secondary text-white font-bold py-2 px-4 rounded-lg shadow-md hover:opacity-90 transition-opacity disabled:bg-green-300 disabled:cursor-not-allowed"
             >
@@ -91,9 +99,19 @@ const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ imageDataUrl, onCon
               Ajustar
             </button>
           </div>
+          <div className="border-t pt-3 mt-3 text-center">
+             <button
+              onClick={handleEnhanceDocument}
+              disabled={loading}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white border border-primary text-primary font-bold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-50 transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+            >
+              <DocumentScannerIcon className="h-5 w-5" />
+              Mejorar Documento
+            </button>
+          </div>
         </div>
 
-        <div className="flex justify-end items-center gap-3 flex-shrink-0">
+        <div className="flex justify-end items-center gap-3 flex-shrink-0 border-t pt-4 mt-2">
           <button onClick={onClose} className="py-2 px-4 rounded-lg bg-gray-200 text-gray-800 font-semibold hover:bg-gray-300 transition-colors">
             Cancelar
           </button>
