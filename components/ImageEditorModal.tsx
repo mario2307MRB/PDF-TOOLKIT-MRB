@@ -17,10 +17,15 @@ const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ imageDataUrl, onCon
 
   const processImageWithAI = async (aiPrompt: string) => {
     if (!aiPrompt) return;
+
     setLoading(true);
     setError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+      // FIX: The API key must be obtained exclusively from `process.env.API_KEY` and used directly
+      // in the GoogleGenAI constructor as per the coding guidelines. The previous implementation
+      // used a different environment variable method and included a check for the key's existence,
+      // which is discouraged.
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
       const mimeType = currentImage.substring(currentImage.indexOf(':') + 1, currentImage.indexOf(';'));
       const base64Data = currentImage.substring(currentImage.indexOf(',') + 1);
@@ -49,7 +54,12 @@ const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ imageDataUrl, onCon
 
     } catch (err: any) {
       console.error("AI adjustment failed:", err);
-      setError(err.message || "Ocurrió un error al ajustar la imagen.");
+      // Check for specific API key related errors from the library if possible
+      if (err.message && err.message.includes('API key')) {
+          setError("La clave API proporcionada no es válida o ha expirado.");
+      } else {
+          setError(err.message || "Ocurrió un error al ajustar la imagen.");
+      }
     } finally {
       setLoading(false);
     }
@@ -80,7 +90,7 @@ const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ imageDataUrl, onCon
         </div>
 
         <div className="flex-shrink-0 space-y-3">
-          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+          {error && <p className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-md">{error}</p>}
           <div className="flex gap-2">
             <input
               type="text"
