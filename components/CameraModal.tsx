@@ -105,10 +105,10 @@ const CameraModal: React.FC<CameraModalProps> = ({ onCapture, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl p-6 space-y-4">
-        <h2 className="text-xl font-bold text-gray-800">Tomar Foto</h2>
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl p-6 space-y-4 flex flex-col max-h-[90vh]">
+        <h2 className="text-xl font-bold text-gray-800 flex-shrink-0">Tomar Foto</h2>
         
-        <div className="relative aspect-video bg-gray-200 rounded-md overflow-hidden flex items-center justify-center">
+        <div className="relative flex-grow min-h-0 bg-gray-200 rounded-md overflow-hidden flex items-center justify-center">
             {loading && <Spinner />}
             {error && !loading && <p className="text-red-500 px-4 text-center">{error}</p>}
             {!capturedImage ? (
@@ -126,7 +126,7 @@ const CameraModal: React.FC<CameraModalProps> = ({ onCapture, onClose }) => {
             <canvas ref={canvasRef} className="hidden" />
         </div>
 
-        <div className="flex justify-end items-center gap-3">
+        <div className="flex justify-end items-center gap-3 flex-shrink-0 border-t pt-4">
           <button onClick={onClose} className="py-2 px-4 rounded-lg bg-gray-200 text-gray-800 font-semibold hover:bg-gray-300 transition-colors">
             Cancelar
           </button>
