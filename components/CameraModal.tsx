@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Spinner from './Spinner';
 
@@ -10,38 +9,67 @@ interface CameraModalProps {
 const CameraModal: React.FC<CameraModalProps> = ({ onCapture, onClose }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+  }, []);
+
   const startCamera = useCallback(async () => {
+    stopCamera();
     setLoading(true);
     setError(null);
     setCapturedImage(null);
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-      });
-      setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
-    } catch (err) {
-      console.error("Error accessing camera:", err);
-      setError("No se pudo acceder a la cámara. Por favor, compruebe los permisos.");
-    } finally {
-        setLoading(false);
-    }
-  }, []);
-  
-  const stopCamera = useCallback(() => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-  }, [stream]);
 
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setError("La cámara no es compatible con este navegador.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+        const permissions = await navigator.permissions.query({ name: 'camera' as PermissionName });
+        if (permissions.state === 'denied') {
+            setError("El acceso a la cámara fue denegado. Por favor, habilítelo en la configuración de su navegador.");
+            setLoading(false);
+            return;
+        }
+    } catch (e) {
+        console.warn("Permissions API no es soportada, procediendo con getUserMedia.", e);
+    }
+    
+    const constraints: MediaStreamConstraints[] = [
+      { video: { facingMode: 'environment' } },
+      { video: true },
+    ];
+
+    let stream: MediaStream | null = null;
+    for (const constraint of constraints) {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraint);
+        break; 
+      } catch (err) {
+        console.warn("No se pudo obtener stream con la restricción:", constraint, err);
+      }
+    }
+
+    if (stream) {
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } else {
+      setError("No se pudo acceder a la cámara. Por favor, compruebe los permisos y que no esté en uso por otra aplicación.");
+      setLoading(false);
+    }
+  }, [stopCamera]);
+  
   useEffect(() => {
     startCamera();
     return () => {
@@ -50,7 +78,7 @@ const CameraModal: React.FC<CameraModalProps> = ({ onCapture, onClose }) => {
   }, [startCamera, stopCamera]);
 
   const handleCapture = () => {
-    if (videoRef.current && canvasRef.current) {
+    if (videoRef.current && canvasRef.current && !loading) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       canvas.width = video.videoWidth;
@@ -82,9 +110,16 @@ const CameraModal: React.FC<CameraModalProps> = ({ onCapture, onClose }) => {
         
         <div className="relative aspect-video bg-gray-200 rounded-md overflow-hidden flex items-center justify-center">
             {loading && <Spinner />}
-            {error && <p className="text-red-500 px-4 text-center">{error}</p>}
+            {error && !loading && <p className="text-red-500 px-4 text-center">{error}</p>}
             {!capturedImage ? (
-                <video ref={videoRef} autoPlay playsInline className={`w-full h-full object-cover ${loading || error ? 'hidden' : 'block'}`} />
+                <video 
+                  ref={videoRef} 
+                  autoPlay 
+                  playsInline 
+                  muted
+                  onCanPlay={() => setLoading(false)}
+                  className={`w-full h-full object-cover ${loading || error ? 'hidden' : 'block'}`} 
+                />
             ) : (
                 <img src={capturedImage} alt="Captured preview" className="w-full h-full object-contain" />
             )}

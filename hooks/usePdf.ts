@@ -57,6 +57,10 @@ export const usePdf = () => {
         });
       }
     }
+    
+    // Clean up the pdf.js document proxy to free up memory
+    pdfJsDoc.destroy();
+
     setPages(prev => [...prev, ...newPages]);
     setStoredDocs(prev => [...prev, ...newDocs]);
   }, []);
