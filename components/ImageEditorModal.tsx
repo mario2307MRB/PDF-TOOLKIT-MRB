@@ -18,16 +18,16 @@ const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ imageDataUrl, onCon
   const processImageWithAI = async (aiPrompt: string) => {
     if (!aiPrompt) return;
 
-    const apiKey = process.env.API_KEY;
-    if (!apiKey) {
-      setError("Error de configuración: La clave de API no fue encontrada. Por favor, configure la variable de entorno 'API_KEY'.");
+    // FIX: Use process.env.API_KEY as per the coding guidelines, which resolves the TypeScript error.
+    if (!process.env.API_KEY) {
+      setError("Error de configuración: La clave de API no fue encontrada. Asegúrese de que la variable de entorno 'API_KEY' esté configurada.");
       return;
     }
 
     setLoading(true);
     setError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
       const mimeType = currentImage.substring(currentImage.indexOf(':') + 1, currentImage.indexOf(';'));
       const base64Data = currentImage.substring(currentImage.indexOf(',') + 1);
@@ -78,6 +78,7 @@ const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ imageDataUrl, onCon
       let errorMessage = "Ocurrió un error al ajustar la imagen. Inténtelo de nuevo.";
       if (err instanceof Error && err.message) {
         if (err.message.includes('API key')) {
+            // FIX: Update error message to refer to API_KEY instead of VITE_API_KEY.
             errorMessage = "Error de API: La clave proporcionada no es válida. Verifique su variable de entorno 'API_KEY'.";
         } else if (err.message.includes('400')) { // Bad request, maybe prompt issue
             errorMessage = "La IA no pudo procesar la solicitud. Intente con un prompt diferente o una imagen distinta.";
