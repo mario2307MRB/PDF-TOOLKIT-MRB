@@ -16,6 +16,11 @@ interface SelectedFile {
   id: string;
 }
 
+export interface GeneratedPdf {
+  blob: Blob;
+  filename: string;
+}
+
 const App: React.FC = () => {
   const {
     pages,
@@ -33,6 +38,7 @@ const App: React.FC = () => {
 
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
   const [isSaveSuccess, setIsSaveSuccess] = useState<boolean>(false);
+  const [generatedPdf, setGeneratedPdf] = useState<GeneratedPdf | null>(null);
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [showImageEditorModal, setShowImageEditorModal] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<string | null>(null);
@@ -71,6 +77,16 @@ const App: React.FC = () => {
   const handleImageConfirmed = async (imageDataUrl: string) => {
     setShowImageEditorModal(false);
     setImageToEdit(null);
+  
+    // If there are files selected for preview, process them first.
+    if (selectedFiles.length > 0) {
+      // Process the selected PDF files
+      await addFiles(selectedFiles.map(sf => sf.file));
+      // Clear the selection so we don't process them again
+      setSelectedFiles([]);
+    }
+    
+    // Now process the new image and add it as a page
     await addImageAsPage(imageDataUrl);
   };
 
@@ -88,8 +104,20 @@ const App: React.FC = () => {
   };
 
   const handleSavePdf = async (compressionLevel: CompressionLevel) => {
-    const success = await savePdf(compressionLevel);
-    if (success) {
+    const result = await savePdf(compressionLevel);
+    if (result) {
+      // Trigger download
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(result.blob);
+      link.href = url;
+      link.download = result.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      // Store file for sharing
+      setGeneratedPdf(result);
       setIsSaveSuccess(true);
     }
   };
@@ -98,11 +126,12 @@ const App: React.FC = () => {
     reset();
     setSelectedFiles([]);
     setIsSaveSuccess(false);
+    setGeneratedPdf(null);
   };
 
   const renderContent = () => {
     if (isSaveSuccess) {
-      return <SuccessScreen onStartOver={handleReset} />;
+      return <SuccessScreen onStartOver={handleReset} generatedPdf={generatedPdf} />;
     }
     if (pages.length > 0) {
       return (
@@ -130,6 +159,8 @@ const App: React.FC = () => {
           onCancel={() => setSelectedFiles([])}
           onAddFiles={handleInitialFileSelect}
           loading={loading}
+          onImageFileChange={handleImageFileSelected}
+          onTakePhoto={() => setShowCameraModal(true)}
         />
       );
     }

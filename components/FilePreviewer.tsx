@@ -1,6 +1,6 @@
 
-import React, { useState, useRef } from 'react';
-import { FilePdfIcon, TrashIcon, PlusIcon, RefreshIcon } from './icons';
+import React, { useState, useRef, useEffect } from 'react';
+import { FilePdfIcon, TrashIcon, PlusIcon, RefreshIcon, ImageIcon, CameraIcon, UploadIcon } from './icons';
 import Spinner from './Spinner';
 
 interface SelectedFile {
@@ -15,11 +15,28 @@ interface FilePreviewerProps {
   onCancel: () => void;
   onAddFiles: (event: React.ChangeEvent<HTMLInputElement>) => void;
   loading: boolean;
+  onImageFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onTakePhoto: () => void;
 }
 
-const FilePreviewer: React.FC<FilePreviewerProps> = ({ files, onFilesChange, onConfirm, onCancel, onAddFiles, loading }) => {
+const FilePreviewer: React.FC<FilePreviewerProps> = ({ files, onFilesChange, onConfirm, onCancel, onAddFiles, loading, onImageFileChange, onTakePhoto }) => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showImageDropdown, setShowImageDropdown] = useState(false);
+  const imageDropdownRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (imageDropdownRef.current && !imageDropdownRef.current.contains(event.target as Node)) {
+        setShowImageDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
@@ -61,6 +78,10 @@ const FilePreviewer: React.FC<FilePreviewerProps> = ({ files, onFilesChange, onC
 
   const handleAddFilesClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleAddImageClick = () => {
+    imageInputRef.current?.click();
   };
 
   return (
@@ -117,7 +138,7 @@ const FilePreviewer: React.FC<FilePreviewerProps> = ({ files, onFilesChange, onC
           className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-gray-100 transition-colors duration-200"
         >
           <PlusIcon className="h-5 w-5" />
-          Añadir más
+          Añadir más PDFs
         </button>
         <input
           type="file"
@@ -127,6 +148,36 @@ const FilePreviewer: React.FC<FilePreviewerProps> = ({ files, onFilesChange, onC
           onChange={onAddFiles}
           className="hidden"
         />
+
+        <div className="relative" ref={imageDropdownRef}>
+          <button
+            onClick={() => setShowImageDropdown(prev => !prev)}
+            className="flex items-center gap-2 bg-secondary text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:opacity-90 transition-colors duration-200 h-full"
+            aria-haspopup="true"
+            aria-expanded={showImageDropdown}
+          >
+            <ImageIcon className="h-5 w-5" />
+            Añadir Imagen
+          </button>
+          {showImageDropdown && (
+            <div className="absolute bottom-full right-0 mb-2 w-48 bg-white rounded-md shadow-lg z-20 border">
+              <button
+                onClick={() => { handleAddImageClick(); setShowImageDropdown(false); }}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+              >
+                <UploadIcon className="h-5 w-5" /> Subir Imagen
+              </button>
+              <button
+                onClick={() => { onTakePhoto(); setShowImageDropdown(false); }}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+              >
+                <CameraIcon className="h-5 w-5" /> Tomar Foto
+              </button>
+            </div>
+          )}
+        </div>
+        <input type="file" ref={imageInputRef} accept="image/png, image/jpeg" onChange={onImageFileChange} className="hidden" />
+
         <button
             onClick={onCancel}
             className="flex items-center gap-2 bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-gray-300 transition-colors duration-200"

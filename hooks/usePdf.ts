@@ -1,5 +1,7 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import type { PdfPage, CompressionLevel } from '../types';
+import type { GeneratedPdf } from '../App';
 
 declare const pdfjsLib: any;
 declare const PDFLib: any;
@@ -186,10 +188,10 @@ export const usePdf = () => {
     );
   }, []);
 
-  const savePdf = useCallback(async (compressionLevel: CompressionLevel = 'high'): Promise<boolean> => {
+  const savePdf = useCallback(async (compressionLevel: CompressionLevel = 'high'): Promise<GeneratedPdf | null> => {
     if (pages.length === 0) {
       setError('No hay páginas para guardar.');
-      return false;
+      return null;
     }
     setLoading(true);
     setError(null);
@@ -218,20 +220,14 @@ export const usePdf = () => {
 
       const pdfBytes = await newPdfDoc.save(saveOptions);
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.href = url;
-      link.download = `documento-unido-${Date.now()}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      return true;
+      const filename = `documento-unido-${Date.now()}.pdf`;
+      
+      return { blob, filename };
 
     } catch (e) {
       console.error(e);
       setError('Hubo un error al guardar el PDF.');
-      return false;
+      return null;
     } finally {
       setLoading(false);
       setProcessingMessage('');
