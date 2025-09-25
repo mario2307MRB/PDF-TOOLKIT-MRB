@@ -18,7 +18,6 @@ const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ imageDataUrl, onCon
   const processImageWithAI = async (aiPrompt: string) => {
     if (!aiPrompt) return;
 
-    // FIX: Use process.env.API_KEY instead of import.meta.env.VITE_API_KEY to fix the TypeScript error and align with Gemini API guidelines.
     const apiKey = process.env.API_KEY;
     if (!apiKey) {
       setError("Error de configuración: La clave de API no fue encontrada. Por favor, configure la variable de entorno 'API_KEY'.");
@@ -46,12 +45,31 @@ const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ imageDataUrl, onCon
         },
       });
 
-      const imagePart = response.candidates?.[0]?.content?.parts.find(part => part.inlineData);
+      if (response.promptFeedback?.blockReason) {
+        throw new Error(`Solicitud bloqueada por seguridad: ${response.promptFeedback.blockReason}. Intente con una imagen o prompt diferente.`);
+      }
+
+      const candidate = response.candidates?.[0];
+
+      if (!candidate) {
+        throw new Error("La IA no generó ninguna respuesta. Verifique su conexión o inténtelo de nuevo.");
+      }
+      
+      if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+          throw new Error(`La IA finalizó inesperadamente por: ${candidate.finishReason}.`);
+      }
+
+      const imagePart = candidate.content?.parts.find(part => part.inlineData);
+      
       if (imagePart?.inlineData) {
         const newBase64 = imagePart.inlineData.data;
         const newMimeType = imagePart.inlineData.mimeType;
         setCurrentImage(`data:${newMimeType};base64,${newBase64}`);
       } else {
+        const textPart = candidate.content?.parts.find(part => part.text);
+        if (textPart?.text) {
+             throw new Error(`La IA respondió con texto en lugar de una imagen: "${textPart.text}"`);
+        }
         throw new Error("La IA no devolvió una imagen. Intenta con otro prompt.");
       }
 
@@ -60,7 +78,6 @@ const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ imageDataUrl, onCon
       let errorMessage = "Ocurrió un error al ajustar la imagen. Inténtelo de nuevo.";
       if (err instanceof Error && err.message) {
         if (err.message.includes('API key')) {
-            // FIX: Update error message to refer to the correct environment variable 'API_KEY'.
             errorMessage = "Error de API: La clave proporcionada no es válida. Verifique su variable de entorno 'API_KEY'.";
         } else if (err.message.includes('400')) { // Bad request, maybe prompt issue
             errorMessage = "La IA no pudo procesar la solicitud. Intente con un prompt diferente o una imagen distinta.";
