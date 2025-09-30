@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { usePdf } from './hooks/usePdf';
 import FileUploader from './components/FileUploader';
@@ -21,6 +22,62 @@ export interface GeneratedPdf {
   filename: string;
 }
 
+// Declare PDFLib to satisfy TypeScript since it's loaded from a CDN
+declare const PDFLib: any;
+
+// Helper function to convert an image data URL to a PDF File object
+const createImagePdfFile = async (imageDataUrl: string): Promise<File | null> => {
+    try {
+        if (typeof PDFLib === 'undefined' || !PDFLib.PDFDocument) {
+            console.error("pdf-lib.js is not loaded yet.");
+            return null;
+        }
+
+        const { PDFDocument, PageSizes } = PDFLib;
+        const newPdfDoc = await PDFDocument.create();
+        const imageBytes = await fetch(imageDataUrl).then(res => res.arrayBuffer());
+        
+        let image;
+        if (imageDataUrl.startsWith('data:image/jpeg') || imageDataUrl.startsWith('data:image/jpg')) {
+            image = await newPdfDoc.embedJpg(imageBytes);
+        } else if (imageDataUrl.startsWith('data:image/png')) {
+            image = await newPdfDoc.embedPng(imageBytes);
+        } else {
+            console.error('Unsupported image type for PDF conversion.');
+            return null;
+        }
+
+        const imageAspectRatio = image.width / image.height;
+        const page = newPdfDoc.addPage(PageSizes.A4);
+        const { width: pageWidth, height: pageHeight } = page.getSize();
+        const pageAspectRatio = pageWidth / pageHeight;
+
+        let scaledWidth, scaledHeight;
+        const margin = 0.9; 
+        if (imageAspectRatio > pageAspectRatio) {
+            scaledWidth = pageWidth * margin;
+            scaledHeight = scaledWidth / imageAspectRatio;
+        } else {
+            scaledHeight = pageHeight * margin;
+            scaledWidth = scaledHeight * imageAspectRatio;
+        }
+
+        const x = (pageWidth - scaledWidth) / 2;
+        const y = (pageHeight - scaledHeight) / 2;
+
+        page.drawImage(image, { x, y, width: scaledWidth, height: scaledHeight });
+
+        const pdfBytes = await newPdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const fileName = `Imagen-${Date.now()}.pdf`;
+        return new File([blob], fileName, { type: 'application/pdf' });
+    } catch (error) {
+        console.error("Failed to create PDF from image:", error);
+        return null;
+    }
+};
+
+
 const App: React.FC = () => {
   const {
     pages,
@@ -42,11 +99,13 @@ const App: React.FC = () => {
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [showImageEditorModal, setShowImageEditorModal] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<string | null>(null);
+  const [isConvertingImage, setIsConvertingImage] = useState(false);
 
   const handleInitialFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      const newFilesWithId = Array.from(files).map(file => ({
+      // FIX: Explicitly type `file` as `File` to help TypeScript's type inference.
+      const newFilesWithId = Array.from(files).map((file: File) => ({
         file,
         id: `${file.name}-${file.size}-${file.lastModified}-${Math.random()}`
       }));
@@ -77,17 +136,27 @@ const App: React.FC = () => {
   const handleImageConfirmed = async (imageDataUrl: string) => {
     setShowImageEditorModal(false);
     setImageToEdit(null);
-  
-    // If there are files selected for preview, process them first.
-    if (selectedFiles.length > 0) {
-      // Process the selected PDF files
-      await addFiles(selectedFiles.map(sf => sf.file));
-      // Clear the selection so we don't process them again
-      setSelectedFiles([]);
+
+    // If we are already in the editor, add the image directly as a page.
+    if (pages.length > 0) {
+      await addImageAsPage(imageDataUrl);
+    } 
+    // Otherwise, if we are in the file preview stage...
+    else {
+      // Convert the image to a PDF file and add it to the preview list.
+      setIsConvertingImage(true);
+      const newPdfFile = await createImagePdfFile(imageDataUrl);
+      setIsConvertingImage(false);
+
+      if (newPdfFile) {
+        const newFileWithId = {
+          file: newPdfFile,
+          id: `${newPdfFile.name}-${newPdfFile.size}-${newPdfFile.lastModified}-${Math.random()}`
+        };
+        setSelectedFiles(prev => [...prev, newFileWithId]);
+      }
+      // TODO: Optionally set an error state to show a message to the user on failure.
     }
-    
-    // Now process the new image and add it as a page
-    await addImageAsPage(imageDataUrl);
   };
 
   const handleAddMoreToEditor = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,17 +227,17 @@ const App: React.FC = () => {
           onConfirm={handleConfirmAndProcess}
           onCancel={() => setSelectedFiles([])}
           onAddFiles={handleInitialFileSelect}
-          loading={loading}
+          loading={loading || isConvertingImage}
           onImageFileChange={handleImageFileSelected}
           onTakePhoto={() => setShowCameraModal(true)}
         />
       );
     }
-    if (loading) {
+    if (loading || isConvertingImage) {
       return (
         <div className="flex flex-col items-center justify-center p-8 rounded-lg bg-white shadow-lg border-2 border-dashed border-gray-300 min-h-[400px]">
           <Spinner />
-          <p className="mt-4 text-lg font-semibold text-gray-700">{processingMessage || 'Procesando archivos...'}</p>
+          <p className="mt-4 text-lg font-semibold text-gray-700">{isConvertingImage ? 'Convirtiendo imagen...' : (processingMessage || 'Procesando archivos...')}</p>
           <p className="text-gray-500">Esto puede tardar unos momentos.</p>
         </div>
       );
